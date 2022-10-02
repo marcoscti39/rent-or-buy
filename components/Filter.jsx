@@ -1,6 +1,8 @@
+/* eslint-disable object-shorthand */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable react/prop-types */
 import React, { useState } from "react";
+import { useRouter } from "next/router";
 
 import {
   purpose,
@@ -15,28 +17,35 @@ import {
   propertyType,
 } from "../filterOptions";
 import { FilterSection, StyledSelectFilter } from "../styles/styledPurpose";
-import { fetchDataWithFilter } from "./API/fetchWithFilter";
+import { getFilterValues } from "../filterData";
 
-function SelectFilter({ content, param, setHouseContentFiltered }) {
-  const [paramsToFilter, setParamsToFilter] = useState({});
-  React.useEffect(() => {
-    async function activateFilter() {
-      const response = await fetchDataWithFilter(paramsToFilter);
-      console.log(response);
-      console.log(paramsToFilter);
-    }
-    if (paramsToFilter) {
-      activateFilter();
-    }
-  }, [paramsToFilter]);
+function SelectFilter({ content, param }) {
+  const router = useRouter();
 
-  const selectFilter = (e) => {
-    setParamsToFilter((prev) => {
-      prev[param] += e.target.value.toLowerCase();
+  const selectFilter = (filterObj) => {
+    console.log("obj :", filterObj);
+    console.log("router: ", router);
+    const path = router.pathname;
+    const { query } = router;
+    console.log("router pathname: ", path);
+    console.log("router query: ", query);
+
+    const values = getFilterValues(filterObj);
+    console.log(values);
+    values.forEach((item) => {
+      if (item.value && filterObj?.[item.name]) {
+        query[item.name] = item.value;
+      }
     });
+
+    router.push({ pathname: path, query: query });
   };
   return (
-    <StyledSelectFilter onChange={(e) => selectFilter(e)}>
+    <StyledSelectFilter
+      onChange={(e) =>
+        selectFilter({ [param]: e.target.value.toLocaleLowerCase() })
+      }
+    >
       {content.map((item, index) => (
         <option key={index} value={index === 0 ? "" : item}>
           {item}
